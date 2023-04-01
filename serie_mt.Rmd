@@ -1,0 +1,123 @@
+---
+title: "SERIE_TIEMPO_MT"
+author: "Miller Asprilla"
+date: "31/3/2023"
+output: html_document
+---
+
+
+## Librerias
+
+```{r, warning=FALSE}
+library(car)
+library(tseries)
+library(urca)
+library(highcharter)# para graficar series de tiempo 
+library(TSstudio) # para graficar series de tiempo 
+library(forecast)
+library(rio) # cargar datos desde github
+#library(fitAR)
+```
+
+
+## Carga de Datos
+
+
+```{r}
+mt = rio::import("https://raw.githubusercontent.com/MILLERASPRILLA/series_de_tiempo/main/serie5.csv")
+mt
+```
+
+
+## Formato Serie de Tiempo
+
+
+```{r}
+df1 = ts(mt[,c(3)], start = c(2020,7), end = c(2023, 1), frequency = 12)
+df1
+```
+
+
+## Visualización de la Serie 
+
+
+```{r}
+hchart(df1)
+```
+
+
+## Descomposición de la serie  
+
+```{r}
+plot(decompose(df1))
+```
+
+
+## Prueba Dickey Fuller
+
+```{r, warning=FALSE}
+adf.test(df1, alternative = "stationary")
+```
+
+## Serie con una diferencia 
+
+
+```{r}
+hchart(diff(df1, 1))
+```
+
+## Descomposición de la serie con una diferencia 
+
+```{r}
+plot(decompose(diff(df1)))
+```
+
+
+
+## Prueba Dickey Fuller serie con 1 diferencia 
+
+
+```{r}
+adf.test(diff(df1, alternative = "stationary"))
+```
+
+## Identificacion del modelo
+
+
+```{r}
+par(mfrow=c(2,1))
+acf(diff(df1))
+pacf(diff(df1))
+```
+
+## Modelo 
+
+```{r}
+modelo1 = stats::arima(df1, order = c(0,1,2),
+                       seasonal = list(order = c(0,1,1), period =12),
+                         fixed = c(NA, NA, NA))
+```
+
+
+```{r}
+modelo1
+```
+
+
+
+
+
+```{r}
+tsdiag(modelo1)
+```
+
+```{r}
+Box.test(residuals(modelo1), type= "Ljung-Box")
+```
+
+
+```{r}
+plot(forecast(modelo1,h=5, fan=T))
+lines(fitted(modelo1), col="red")
+```
+
